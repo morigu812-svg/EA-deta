@@ -45,6 +45,12 @@ function doPost(e) {
       case "addLink":
         result = addLink(args.token, args.title, args.description, args.url, args.category);
         break;
+      case "submitSurvey":
+        result = submitSurvey(args.answer, args.feedback);
+        break;
+      case "getSurveyResults":
+        result = getSurveyResults(args.token);
+        break;
       case "clearAllComments":
         result = clearAllComments(args.token);
         break;
@@ -97,4 +103,50 @@ function clearAllComments(token) {
     ok: true,
     message: "過去のコメントをクリアしました。"
   };
+}
+
+
+function getOrCreateSurveySheet_() {
+  var ss = getDatabase_();
+  var sheetName = "SurveyResponses";
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(["送信日時", "回答", "改善要望"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function submitSurvey(answer, feedback) {
+  var allowed = ["とても活用できている", "ある程度活用できている", "あまり活用できていない", "活用できていない"];
+  answer = String(answer || "").trim();
+  feedback = String(feedback || "").trim().slice(0, 500);
+  if (allowed.indexOf(answer) === -1) throw new Error("回答を選び直してください。");
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = getOrCreateSurveySheet_();
+    sheet.appendRow([new Date(), answer, feedback]);
+  } finally {
+    lock.releaseLock();
+  }
+  return {ok: true, message: "アンケートを送信しました。ご協力ありがとうございます。"};
+}
+
+function getSurveyResults(token) {
+  requireAdmin_(token);
+  var sheet = getOrCreateSurveySheet_();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return {responses: []};
+  var values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  return {responses: values.map(function(row) {
+    return {
+      timestamp: row[0] instanceof Date
+        ? Utilities.formatDate(row[0], Session.getScriptTimeZone() || "Asia/Tokyo", "yyyy/MM/dd HH:mm")
+        : String(row[0] || ""),
+      answer: String(row[1] || ""),
+      feedback: String(row[2] || "")
+    };
+  })};
 }
