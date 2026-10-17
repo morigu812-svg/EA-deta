@@ -46,7 +46,7 @@ function doPost(e) {
         result = addLink(args.token, args.title, args.description, args.url, args.category);
         break;
       case "submitSurvey":
-        result = submitSurvey(args.answer, args.feedback);
+        result = submitSurvey(args.answer, args.usage, args.feedback);
         break;
       case "getSurveyResults":
         result = getSurveyResults(args.token);
@@ -112,22 +112,26 @@ function getOrCreateSurveySheet_() {
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    sheet.appendRow(["送信日時", "回答", "改善要望"]);
+    sheet.appendRow(["送信日時", "回答", "活用方法", "改善要望"]);
     sheet.setFrozenRows(1);
+  } else if (sheet.getLastColumn() < 4) {
+    sheet.getRange(1, 3).setValue("活用方法");
+    sheet.getRange(1, 4).setValue("改善要望");
   }
   return sheet;
 }
 
-function submitSurvey(answer, feedback) {
+function submitSurvey(answer, usage, feedback) {
   var allowed = ["とても活用できている", "ある程度活用できている", "あまり活用できていない", "活用できていない"];
   answer = String(answer || "").trim();
+  usage = String(usage || "").trim().slice(0, 500);
   feedback = String(feedback || "").trim().slice(0, 500);
   if (allowed.indexOf(answer) === -1) throw new Error("回答を選び直してください。");
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     var sheet = getOrCreateSurveySheet_();
-    sheet.appendRow([new Date(), answer, feedback]);
+    sheet.appendRow([new Date(), answer, usage, feedback]);
   } finally {
     lock.releaseLock();
   }
@@ -139,14 +143,15 @@ function getSurveyResults(token) {
   var sheet = getOrCreateSurveySheet_();
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return {responses: []};
-  var values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  var values = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
   return {responses: values.map(function(row) {
     return {
       timestamp: row[0] instanceof Date
         ? Utilities.formatDate(row[0], Session.getScriptTimeZone() || "Asia/Tokyo", "yyyy/MM/dd HH:mm")
         : String(row[0] || ""),
       answer: String(row[1] || ""),
-      feedback: String(row[2] || "")
+      usage: String(row[2] || ""),
+      feedback: String(row[3] || "")
     };
   })};
 }
