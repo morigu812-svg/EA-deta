@@ -33,7 +33,20 @@
     <div class="brand"><div class="logo">EA</div><div><h1>EAデータ</h1><p class="sub">学習リンクを、すばやく開く。</p></div></div>
     <div class="pill">LINK HUB / GITHUB PAGES</div>
   </header>
-  <section class="hero"><h2>必要なリンクを、ここから。</h2><p>リンクを検索したり、カテゴリで絞り込んだりできます。</p></section>
+  <section class="hero"><h2>このEAのデータをうまく活用できていますか？</h2><p>簡単なアンケートにご協力ください。</p>
+<form id="survey-form" class="stack" style="margin-top:16px">
+<label for="survey-answer" class="muted">活用できていますか？</label>
+<select id="survey-answer" class="field" required>
+<option value="">回答を選択してください</option>
+<option value="とても活用できている">とても活用できている</option>
+<option value="ある程度活用できている">ある程度活用できている</option>
+<option value="あまり活用できていない">あまり活用できていない</option>
+<option value="活用できていない">活用できていない</option>
+</select>
+<label for="survey-feedback" class="muted">改善してほしいところ（任意）</label>
+<textarea id="survey-feedback" class="field" rows="2" maxlength="500" placeholder="もっとこうしてほしい、など"></textarea>
+<div class="row"><button class="btn primary" type="submit" id="survey-submit">アンケートを送信</button><span id="survey-status" class="status" role="status"></span></div>
+</form></section>
 
   <div class="section-head"><h2>リンク一覧</h2><span class="muted" id="link-count"></span></div>
   <div class="controls"><input id="search" class="field" type="search" placeholder="リンク名・説明で検索…" aria-label="リンクを検索"><select id="category" class="field" aria-label="カテゴリ"><option value="">すべてのカテゴリ</option></select></div>
@@ -68,7 +81,7 @@
         <label for="new-url" class="muted">URL</label><input id="new-url" class="field" type="url" placeholder="https://…">
         <label for="new-category" class="muted">カテゴリ</label><input id="new-category" class="field" placeholder="例：教材">
         <button id="add-link" class="btn primary" type="button">リンクを追加</button>
-        <div class="section-head"><h2>コメント管理</h2></div>
+        <div class="section-head"><h2>コメント管理</h2></div><div class="section-head"><h2>アンケート結果（管理者のみ）</h2><span id="survey-count" class="muted"></span></div><div id="admin-survey-results" class="stack"><p class="muted">管理者ログイン後に表示します。</p></div>
         <div id="admin-comments" class="stack"><p class="muted">管理者ログイン後に表示します。</p></div>
         <button id="clear-comments" class="btn danger" type="button">過去のコメントをクリア</button>
       </div>
@@ -352,10 +365,58 @@
       root.append(item);
     });
   }
+  async function loadSurveyResults() {
+    const root = $('admin-survey-results');
+    root.replaceChildren();
+    try {
+      const data = await apiCall('getSurveyResults', {token: adminToken});
+      const responses = data && Array.isArray(data.responses) ? data.responses : [];
+      $('survey-count').textContent = responses.length + ' 件';
+      if (!responses.length) {
+        const p = document.createElement('p');
+        p.className = 'muted';
+        p.textContent = 'アンケート回答はまだありません。';
+        root.append(p);
+        return;
+      }
+      const counts = new Map();
+      responses.forEach(item => counts.set(item.answer, (counts.get(item.answer) || 0) + 1));
+      counts.forEach((count, answer) => {
+        const p = document.createElement('p');
+        p.textContent = answer + '：' + count + ' 件';
+        root.append(p);
+      });
+      const heading = document.createElement('p');
+      heading.className = 'muted';
+      heading.textContent = '個別の回答・改善要望';
+      root.append(heading);
+      responses.slice().reverse().forEach(item => {
+        const row = document.createElement('article');
+        row.className = 'comment';
+        const meta = document.createElement('div');
+        meta.className = 'comment-meta';
+        meta.textContent = item.timestamp || '';
+        const answer = document.createElement('p');
+        answer.textContent = '回答：' + (item.answer || '');
+        const feedback = document.createElement('p');
+        feedback.textContent = item.feedback ? '改善要望：' + item.feedback : '改善要望：なし';
+        row.append(meta, answer, feedback);
+        root.append(row);
+      });
+    } catch (error) {
+      $('survey-count').textContent = '';
+      const p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = 'アンケート結果を取得できません：' + error.message;
+      root.append(p);
+    }
+  }
+
   async function loadAdminData() {
     try {
       const data = await apiCall('getAdminData', {token: adminToken});
       renderAdminComments(data.comments || []);
+      await loadSurveyResults();
       setStatus('admin-status', '最新のデータを表示中');
     } catch (error) {
       adminToken = '';
@@ -364,6 +425,26 @@
       setStatus('admin-status', error.message, true);
     }
   }
+
+  $('survey-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const answer = $('survey-answer').value;
+    const feedback = $('survey-feedback').value.trim();
+    if (!answer) return;
+    const button = $('survey-submit');
+    button.disabled = true;
+    setStatus('survey-status', '送信中…');
+    try {
+      const result = await apiCall('submitSurvey', {answer, feedback});
+      $('survey-form').reset();
+      setStatus('survey-status', (result && result.message) || 'アンケートを送信しました。ご協力ありがとうございます。');
+      if (adminToken) await loadSurveyResults();
+    } catch (error) {
+      setStatus('survey-status', '送信できませんでした：' + error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
 
   $('search').addEventListener('input', renderLinks);
   categorySelect.addEventListener('change', renderLinks);
