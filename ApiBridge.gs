@@ -57,11 +57,6 @@ function doPost(e) {
   }
 
   // </script> 等がコメント内容に含まれてもスクリプトを抜けられないよう < をエスケープ。
-  var safeResult = JSON.stringify(result === undefined ? null : result)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026");
-  var safeRequestId = JSON.stringify(requestId);
   var response = {
     type: "EA_DATA_RESULT",
     requestId: requestId,
@@ -75,7 +70,7 @@ function doPost(e) {
     .replace(/&/g, "\\u0026");
 
   var html = '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
-    '<script>window.parent.postMessage(' + safeResponse + ',"*");<\\/script>' +
+    '<script>window.parent.postMessage(' + safeResponse + ',"*");</scr' + 'ipt>' +
     '</body></html>';
 
   return HtmlService.createHtmlOutput(html)
