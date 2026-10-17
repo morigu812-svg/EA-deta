@@ -189,7 +189,7 @@
     titles.forEach(title => {
       const option = document.createElement('option');
       option.value = title;
-      option.textContent = title;
+      option.textContent = title.replace('2年一学期', '2年１学期');
       commentTarget.append(option);
     });
     commentTarget.value = titles.includes(previous) ? previous : DEFAULT_COMMENT_TITLE;
@@ -224,7 +224,7 @@
       icon.textContent = '↗';
       top.append(icon);
       const title = document.createElement('h3');
-      title.textContent = link.title;
+      title.textContent = link.title.replace('2年一学期', '2年１学期');
       const description = document.createElement('p');
       description.textContent = link.description || '';
       const anchor = document.createElement('a');
