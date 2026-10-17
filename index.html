@@ -33,22 +33,7 @@
     <div class="brand"><div class="logo">EA</div><div><h1>EAデータ</h1><p class="sub">学習リンクを、すばやく開く。</p></div></div>
     <div class="pill">LINK HUB / GITHUB PAGES</div>
   </header>
-  <section class="hero"><h2>このEAのデータをうまく活用できていますか？</h2><p>簡単なアンケートにご協力ください。</p>
-<form id="survey-form" class="stack" style="margin-top:16px">
-<label for="survey-answer" class="muted">活用できていますか？</label>
-<select id="survey-answer" class="field" required>
-<option value="">回答を選択してください</option>
-<option value="とても活用できている">とても活用できている</option>
-<option value="ある程度活用できている">ある程度活用できている</option>
-<option value="あまり活用できていない">あまり活用できていない</option>
-<option value="活用できていない">活用できていない</option>
-</select>
-<label for="survey-usage" class="muted">このEAのデータをどのように使用していますか？（任意）</label>
-<textarea id="survey-usage" class="field" rows="2" maxlength="500" placeholder="例：テスト勉強の復習、授業内容の確認など"></textarea>
-<label for="survey-feedback" class="muted">改善してほしいところ（任意）</label>
-<textarea id="survey-feedback" class="field" rows="2" maxlength="500" placeholder="もっとこうしてほしい、など"></textarea>
-<div class="row"><button class="btn primary" type="submit" id="survey-submit">アンケートを送信</button><span id="survey-status" class="status" role="status"></span></div>
-</form></section>
+
 
   <div class="section-head"><h2>リンク一覧</h2><span class="muted" id="link-count"></span></div>
   <div class="controls"><input id="search" class="field" type="search" placeholder="リンク名・説明で検索…" aria-label="リンクを検索"><select id="category" class="field" aria-label="カテゴリ"><option value="">すべてのカテゴリ</option></select></div>
@@ -68,6 +53,23 @@
       <div class="section-head"><h2>過去のコメント</h2><span id="comment-count" class="muted"></span></div>
       <div id="comments"><p class="muted">コメントを読み込んでいます…</p></div>
     </section>
+
+  <section class="hero"><h2>このEAのデータをうまく活用できていますか？</h2><p>簡単なアンケートにご協力ください。</p>
+<form id="survey-form" class="stack" style="margin-top:16px">
+<label for="survey-answer" class="muted">活用できていますか？</label>
+<select id="survey-answer" class="field" required>
+<option value="">回答を選択してください</option>
+<option value="とても活用できている">とても活用できている</option>
+<option value="ある程度活用できている">ある程度活用できている</option>
+<option value="あまり活用できていない">あまり活用できていない</option>
+<option value="活用できていない">活用できていない</option>
+</select>
+<label for="survey-usage" class="muted">このEAのデータをどのように使用していますか？（任意）</label>
+<textarea id="survey-usage" class="field" rows="2" maxlength="500" placeholder="例：テスト勉強の復習、授業内容の確認など"></textarea>
+<label for="survey-feedback" class="muted">改善してほしいところ（任意）</label>
+<textarea id="survey-feedback" class="field" rows="2" maxlength="500" placeholder="もっとこうしてほしい、など"></textarea>
+<div class="row"><button class="btn primary" type="submit" id="survey-submit">アンケートを送信</button><span id="survey-status" class="status" role="status"></span></div>
+</form></section>
 
     <section class="panel">
       <h2>管理者</h2><p class="muted"></p>
