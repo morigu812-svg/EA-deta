@@ -70,7 +70,7 @@ function doPost(e) {
     .replace(/&/g, "\\u0026");
 
   var html = '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
-    '<script>window.parent.postMessage(' + safeResponse + ',"*");</scr' + 'ipt>' +
+    '<script>window.top.postMessage(' + safeResponse + ',"*");</scr' + 'ipt>' +
     '</body></html>';
 
   return HtmlService.createHtmlOutput(html)
