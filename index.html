@@ -46,7 +46,7 @@
         <label for="comment-target" class="muted">対象のリンク</label>
         <select id="comment-target" class="field" required><option>2年２学期期末</option></select>
         <label for="comment-text" class="muted">コメント（個人情報は書かないでください）</label>
-        <textarea id="comment-text" class="field" rows="4" maxlength="1000" placeholder="コメントを入力…" required></textarea>
+        <textarea id="comment-text" class="field" rows="4" maxlength="500" placeholder="コメントを入力…" required></textarea>
         <button class="btn primary" type="submit">コメントを送信</button><div id="comment-status" class="status" role="status"></div>
       </form>
       <div class="notice">コメントは既存のEAデータ保存先に接続します。GAS側に ApiBridge.gs を追加して再デプロイすると有効になります。</div>
@@ -96,8 +96,8 @@
   const categorySelect = $('category');
   const commentTarget = $('comment-target');
 
-  // GASはブラウザのCORS制限があるため、非表示フォームでPOSTし、
-  // GASが返すHTMLから postMessage で結果を受け取る。
+  // GASはCORS制限があるため、非表示フォームでPOSTし、返却HTMLのpostMessageを受け取る。
+  // Google側のリダイレクトでevent.sourceが変わる環境があるため、推測困難なrequestIdで応答を照合する。
   function apiCall(action, args = {}) {
     return new Promise((resolve, reject) => {
       const requestId = 'ea_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
@@ -106,11 +106,13 @@
       iframe.name = frameName;
       iframe.title = 'EAデータ API';
       iframe.hidden = true;
+
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = API_URL;
       form.target = frameName;
       form.hidden = true;
+
       const payload = document.createElement('input');
       payload.type = 'hidden';
       payload.name = 'payload';
@@ -118,8 +120,10 @@
       form.append(payload);
 
       let finished = false;
+      let timeoutId;
       const cleanup = () => {
         window.removeEventListener('message', onMessage);
+        if (timeoutId) window.clearTimeout(timeoutId);
         form.remove();
         iframe.remove();
       };
@@ -130,33 +134,22 @@
         fn(value);
       };
       const onMessage = event => {
-        if (event.source !== iframe.contentWindow) return;
         const data = event.data;
         if (!data || data.type !== 'EA_DATA_RESULT' || data.requestId !== requestId) return;
         if (data.ok) finish(resolve, data.data);
         else finish(reject, new Error(data.error || 'GAS APIでエラーが発生しました。'));
       };
+
       window.addEventListener('message', onMessage);
       document.body.append(iframe, form);
-      const timeout = window.setTimeout(() => finish(reject, new Error('GASから応答がありません。ApiBridge.gsを追加して再デプロイしたか確認してください。')), 20000);
-      const originalCleanup = cleanup;
-      // タイムアウトも含め、すべての終了経路でタイマーを解除する。
-      const safeFinish = (fn, value) => {
-        window.clearTimeout(timeout);
-        finish(fn, value);
-      };
-      // finishの呼び出しをタイマー解除付きに差し替える。
-      const guardedMessage = event => {
-        if (event.source !== iframe.contentWindow) return;
-        const data = event.data;
-        if (!data || data.type !== 'EA_DATA_RESULT' || data.requestId !== requestId) return;
-        if (data.ok) safeFinish(resolve, data.data);
-        else safeFinish(reject, new Error(data.error || 'GAS APIでエラーが発生しました。'));
-      };
-      window.removeEventListener('message', onMessage);
-      window.addEventListener('message', guardedMessage);
-      try { form.submit(); }
-      catch (error) { safeFinish(reject, error); }
+      timeoutId = window.setTimeout(() => {
+        finish(reject, new Error('GASから応答がありません。Apps ScriptにApiBridge.gsを追加し、ウェブアプリを再デプロイしたか確認してください。'));
+      }, 20000);
+      try {
+        form.submit();
+      } catch (error) {
+        finish(reject, error);
+      }
     });
   }
 
