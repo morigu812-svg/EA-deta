@@ -49,9 +49,9 @@
         <textarea id="comment-text" class="field" rows="4" maxlength="1000" placeholder="コメントを入力…" required></textarea>
         <button class="btn primary" type="submit">コメントを送信</button><div id="comment-status" class="status" role="status"></div>
       </form>
-      <div class="notice">現在はGitHub Pages用の表示テンプレートです。コメントを保存するバックエンドを設定するまでは、送信内容は保存されません。</div>
+      <div class="notice">GitHub Pages版のリンク一覧は復元済みです。コメントの保存・表示には、認証付きバックエンドの接続が必要です。接続が完了するまではコメントは保存されません。</div>
       <div class="section-head"><h2>過去のコメント</h2><span id="comment-count" class="muted"></span></div>
-      <div id="comments"><p class="muted">コメント保存機能の接続後に表示されます。</p></div>
+      <div id="comments"><p class="muted">バックエンド接続後にコメントが表示されます。</p></div>
     </section>
 
     <section class="panel">
@@ -79,13 +79,16 @@
 <script>
 (() => {
   'use strict';
-  // GitHub Pages is static. Add a secure server/API before enabling comments or admin mutations.
-  // Seed entries are examples only; edit this array with the real links from your existing GAS site.
+  // 元のEAデータ_Code.gsから復元した初期リンク。
+  // リンク情報は公開サイトに表示されるため、公開可能なURLのみを登録してください。
   const LINKS = [
-    {title:'2年２学期期末', description:'対象リンクの例。実際のリンク先に置き換えてください。', url:'#', category:'学校'},
-    {title:'リンクを追加するには', description:'管理者機能と保存APIは現在未接続です。', url:'#', category:'案内'}
+    {title:'2年一学期中間', description:'中学2年生・1学期中間テスト', url:'https://1drv.ms/x/c/fccdfa5aea1bb1be/IQD1IKeB8iy6QbIRX58dxzfyAfza5t3ZIbu_9wxwgRRI2pA', category:'テスト資料', tags:['2年','1学期','中間テスト']},
+    {title:'2年一学期期末', description:'中学2年生・1学期期末テスト', url:'https://1drv.ms/x/c/fccdfa5aea1bb1be/IQDFYicUnjecT7QNTSkqRK4dAQFOCmTSZxI16hkYJf3dEKE', category:'テスト資料', tags:['2年','1学期','期末テスト']},
+    {title:'2年2学期中間', description:'中学2年生・2学期中間テスト', url:'https://1drv.ms/x/c/fccdfa5aea1bb1be/IQCWEwjzoT7lQ5laNTyasz3VATUFPYaWtImw4bHcABgseyQ', category:'テスト資料', tags:['2年','2学期','中間テスト']},
+    {title:'2年2学期期末', description:'中学2年生・2学期期末テスト', url:'https://1drv.ms/x/c/fccdfa5aea1bb1be/IQAY_8nqJqraTKLooBlc8bAvASsY8RigwujRr-8fcsoCWVg', category:'テスト資料', tags:['2年','2学期','期末テスト']},
+    {title:'2年学年末', description:'中学2年生・学年末テスト', url:'https://1drv.ms/x/c/fccdfa5aea1bb1be/IQDRuMbWdZzXSYzVrvT5pMqeAZKKKuuDX-uZjiqQbjj2Spo', category:'テスト資料', tags:['2年','学年末','期末テスト']}
   ];
-  const DEFAULT_COMMENT_TITLE = '2年２学期期末';
+  const DEFAULT_COMMENT_TITLE = '2年2学期期末';
   const $ = id => document.getElementById(id);
   const linksRoot = $('links');
   const categorySelect = $('category');
@@ -109,7 +112,7 @@
     const query = $('search').value.trim().toLocaleLowerCase();
     const category = categorySelect.value;
     const shown = LINKS.filter(link => (!category || (link.category || 'その他') === category) &&
-      (!query || (link.title + ' ' + link.description + ' ' + link.category).toLocaleLowerCase().includes(query)));
+      (!query || (link.title + ' ' + link.description + ' ' + link.category + ' ' + (link.tags || []).join(' ')).toLocaleLowerCase().includes(query)));
     $('link-count').textContent = shown.length + ' 件';
     linksRoot.replaceChildren();
     if (!shown.length) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = '一致するリンクがありません。'; linksRoot.append(empty); return; }
@@ -133,7 +136,7 @@
     $('comment-status').textContent = '未送信：コメント保存APIがまだ接続されていません。入力内容は保存されません。';
   });
   $('admin-login').addEventListener('click', () => {
-    $('admin-status').textContent = 'ログイン未実装：GitHub Pages上にパスワードを埋め込む方式は安全ではないため、認証APIの接続が必要です。';
+    $('admin-status').textContent = '管理者ログインは未接続です。GitHub Pagesにパスワードを埋め込まず、安全な認証APIを接続する必要があります。';
   });
   populateCategories(); populateCommentTargets(); renderLinks();
 })();
