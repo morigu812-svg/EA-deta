@@ -43,6 +43,8 @@
 <option value="あまり活用できていない">あまり活用できていない</option>
 <option value="活用できていない">活用できていない</option>
 </select>
+<label for="survey-usage" class="muted">このEAのデータをどのように使用していますか？（任意）</label>
+<textarea id="survey-usage" class="field" rows="2" maxlength="500" placeholder="例：テスト勉強の復習、授業内容の確認など"></textarea>
 <label for="survey-feedback" class="muted">改善してほしいところ（任意）</label>
 <textarea id="survey-feedback" class="field" rows="2" maxlength="500" placeholder="もっとこうしてほしい、など"></textarea>
 <div class="row"><button class="btn primary" type="submit" id="survey-submit">アンケートを送信</button><span id="survey-status" class="status" role="status"></span></div>
@@ -388,7 +390,7 @@
       });
       const heading = document.createElement('p');
       heading.className = 'muted';
-      heading.textContent = '個別の回答・改善要望';
+      heading.textContent = '個別の回答・活用方法・改善要望';
       root.append(heading);
       responses.slice().reverse().forEach(item => {
         const row = document.createElement('article');
@@ -398,9 +400,11 @@
         meta.textContent = item.timestamp || '';
         const answer = document.createElement('p');
         answer.textContent = '回答：' + (item.answer || '');
+        const usage = document.createElement('p');
+        usage.textContent = item.usage ? '活用方法：' + item.usage : '活用方法：未回答';
         const feedback = document.createElement('p');
         feedback.textContent = item.feedback ? '改善要望：' + item.feedback : '改善要望：なし';
-        row.append(meta, answer, feedback);
+        row.append(meta, answer, usage, feedback);
         root.append(row);
       });
     } catch (error) {
@@ -429,13 +433,14 @@
   $('survey-form').addEventListener('submit', async event => {
     event.preventDefault();
     const answer = $('survey-answer').value;
+    const usage = $('survey-usage').value.trim();
     const feedback = $('survey-feedback').value.trim();
     if (!answer) return;
     const button = $('survey-submit');
     button.disabled = true;
     setStatus('survey-status', '送信中…');
     try {
-      const result = await apiCall('submitSurvey', {answer, feedback});
+      const result = await apiCall('submitSurvey', {answer, usage, feedback});
       $('survey-form').reset();
       setStatus('survey-status', (result && result.message) || 'アンケートを送信しました。ご協力ありがとうございます。');
       if (adminToken) await loadSurveyResults();
