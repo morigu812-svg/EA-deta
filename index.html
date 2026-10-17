@@ -35,7 +35,7 @@
   </header>
   <section class="hero"><h2>必要なリンクを、ここから。</h2><p>リンクを検索したり、カテゴリで絞り込んだりできます。</p></section>
 
-  <div class="section-head"><h2>リンク１覧</h2><span class="muted" id="link-count"></span></div>
+  <div class="section-head"><h2>リンク一覧</h2><span class="muted" id="link-count"></span></div>
   <div class="controls"><input id="search" class="field" type="search" placeholder="リンク名・説明で検索…" aria-label="リンクを検索"><select id="category" class="field" aria-label="カテゴリ"><option value="">すべてのカテゴリ</option></select></div>
   <div id="links" class="grid"><div class="empty">リンクを読み込んでいます…</div></div>
 
@@ -206,7 +206,7 @@
     if (!shown.length) {
       const empty = document.createElement('div');
       empty.className = 'empty';
-      empty.textContent = '１致するリンクがありません。';
+      empty.textContent = '一致するリンクがありません。';
       linksRoot.append(empty);
       return;
     }
